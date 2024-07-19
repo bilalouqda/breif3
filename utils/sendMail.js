@@ -13,6 +13,8 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+
+
 export const sendEmail = async (to, subject , template, context)=>{
     try {
         const templatePath = path.join(__dirname, '..', 'views', `${template}.hbs`)
