@@ -1,5 +1,72 @@
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const sendEmail = require('../utils/sendMail');
+
+exports.createUser = async (req, res) => {
+    try {
+        const { name, email, password } = req.body;
+        let user = await User.findOne({ email });
+        if (user) {
+            return res.status(400).json({ message: 'User already exists' });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        user = new User({ name, email, password: hashedPassword });
+        await user.save();
+
+        const verificationToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+        const verificationLink = `${process.env.URL}/api/verify-email/${verificationToken}`;
+        await sendEmail(email, 'Verify Your Email', 'email', { name, verificationLink });
+
+        res.status(201).json({ message: 'User registered successfully', user });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+exports.verifyEmail = async (req, res) => {
+    try {
+        const { token } = req.params;
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const user = await User.findById(decoded.id);
+        if (!user) {
+            return res.status(400).json({ message: 'Invalid token' });
+        }
+
+        user.isVerified = true;
+        await user.save();
+        res.status(200).json({ message: 'Email verified successfully' });
+    } catch (err) {
+        res.status(500).json({ message: 'Error verifying email' });
+    }
+};
+
+exports.loginUser = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        const user = await User.findOne({ email });
+        if (!user || !(await bcrypt.compare(password, user.password))) {
+            return res.status(400).json({ message: 'Invalid email or password' });
+        }
+
+        if (!user.isVerified) {
+            return res.status(403).json({ message: 'Email not verified' });
+        }
+
+        const payload = { user: { id: user._id } };
+        const accessToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
+        const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
+
+        res.cookie('refreshToken', refreshToken, { httpOnly: true, expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7) });
+        res.cookie('accessToken', accessToken, { httpOnly: true, expires: new Date(Date.now() + 1000 * 60 * 60) });
+
+        res.status(200).json({ user, accessToken, refreshToken });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};const User = require('../models/User');
+const jwt = require('jsonwebtoken');
 
 
 exports.createUser = async (req, res) => {

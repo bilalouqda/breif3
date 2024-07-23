@@ -1,11 +1,12 @@
 const express = require('express');
 const { createUser, loginUser, getAllUsers, getUserById, updateUser, deleteUser, verifyEmail, refreshToken } = require('../controllers/userController');
 const { authMiddleware,authorize } = require('../middleware/authMiddleware');
+const rateLimit = require('./utils/rateLimite');
 
 const router = express.Router();
 
-router.post('/register', createUser);
-router.post('/login', loginUser);
+router.post('/register',rateLimit, createUser);
+router.post('/login', rateLimit ,loginUser);
 router.post('/verify-email/:token', verifyEmail);
 router.get('/', authMiddleware, authorize('admin'), getAllUsers);
 router.get('/:id', authMiddleware, authorize('admin', 'user'), getUserById); 
