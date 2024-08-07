@@ -1,10 +1,13 @@
 const path = require('path')
-const readFile = promisify(fs.readFile)
-require("dotenv").config()
+const fs = require('fs');
+const { promisify } = require('util');
+
+const readFile = promisify(fs.readFile);require("dotenv").config()
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
-  host: "smtp.ethereal.email",
+  // host: "smtp.ethereal.email",
+  service: 'gmail', 
   port: 587,
   secure: false, // Use `true` for port 465, `false` for all other ports
   auth: {
@@ -15,7 +18,7 @@ const transporter = nodemailer.createTransport({
 
 
 
-export const sendEmail = async (to, subject , template, context)=>{
+const sendEmail = async (to, subject , template, context)=>{
     try {
         const templatePath = path.join(__dirname, '..', 'views', `${template}.hbs`)
 
@@ -39,3 +42,4 @@ export const sendEmail = async (to, subject , template, context)=>{
         
     }
 }
+module.exports = sendEmail;

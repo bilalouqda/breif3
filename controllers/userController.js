@@ -1,7 +1,7 @@
-const User = require('../models/User');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const sendEmail = require('../utils/sendMail');
+const User = require('../models/User');
 
 exports.createUser = async (req, res) => {
     try {
@@ -65,8 +65,7 @@ exports.loginUser = async (req, res) => {
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
-};const User = require('../models/User');
-const jwt = require('jsonwebtoken');
+};
 
 
 exports.createUser = async (req, res) => {
@@ -139,8 +138,8 @@ exports.loginUser = async (req, res) => {
         console.log(payload);
         const accessToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
         const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, { expiresIn: '1d'})
-        res.cookie('refreshToken', refreshToken, { httpOnly: true, expires: new Date(Date.now() + 1000*60*60*24*7) }); // 7 days
-        res.cookie('accessToken', accessToken, { httpOnly: true, expires: new Date(Date.now() + 1000*60*60) }); // 1 hour
+        res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: true});
+        res.cookie('accessToken', accessToken, { httpOnly: true, secure: true}); 
         res.status(200).json({ user, accessToken, refreshToken });
 
         res.json({message: 'User logged successfully', data : payload})
@@ -224,3 +223,105 @@ exports.refreshToken = async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// const jwt = require('jsonwebtoken');
+
+
+// exports.createUser = async (req, res) => {
+//     try {
+//         const { name, email, password } = req.body;
+//         const user = await User.findOne({ email });
+//         if(user){
+//             return res.status(400).json({ message: 'User already exists' })
+//         }
+//         // const verificationToken = crypto.randomBytes(20).ToString("hex")
+//         const token = user.generateAuthToken();
+//         user = new User({name, email, password, token})
+//         await user.save();
+//         const verificationLink = `${process.env.URL}/api/verify-email/${verificationCode}`;
+//         await sendEmail(
+//             email,
+//             'Verify Your email',
+//             'email',
+//             {name, verificationLink}
+//         )
+//         console.log(token)
+//         res.status(201).json({ user, token });
+//     } catch (err) {
+//         res.status(400).json({ message: err.message });
+//     }
+// };
+
+// exports.verifyEmail = async (req,res)=>{
+//     try {
+//         const {token}= req.params
+//         const user = await User.findOne({verificationToken: token})
+//         if(!user){
+//             return res.status(400).json({ message: 'Invalid token' });
+//         }
+//         user.isVerified = true
+//         user.verificationToken = null
+//         await user.save()
+//         res.status(200).json({ message: 'Email verified successfully' });
+//         // sendEmail(
+//         //     user.email,
+//         //     'Welcome to our website!',
+//         //     'welcome',
+//         //     {name}
+//         // )
+//         // console.log('Email sent: ', email);
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ message: 'Error verifying email' });
+//     }
+// }
+
+
+
+// exports.loginUser = async (req, res) => {
+//     try {
+//         const { name, email, password } = req.body;
+//         const user = await User.findOne({ email });
+//         console.log("user",user);
+//         if (!user || !(await user.isValidPassword(password))) {
+//             return res.status(400).json({ message: 'Invalid email or password' });
+//         }
+//         if(!user.isVerified){
+//             return res.status(403).json({ message: 'Email not verified' });
+//         }
+//         const checkPassword = await bycrpt.compare(password, user.password)
+//         if(!checkPassword){
+//             return res.status(400).json({ message: 'Invalid password' });
+//         }
+//         const payload = {user:{id : user.id}}
+//         console.log(payload);
+//         const accessToken = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
+//         const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, { expiresIn: '1d'})
+//         res.cookie('refreshToken', refreshToken, { httpOnly: true, expires: new Date(Date.now() + 1000*60*60*24*7) }); // 7 days
+//         res.cookie('accessToken', accessToken, { httpOnly: true, expires: new Date(Date.now() + 1000*60*60) }); // 1 hour
+//         res.status(200).json({ user, accessToken, refreshToken });
+
+//         res.json({message: 'User logged successfully', data : payload})
+
+//         // const token = user.generateAuthToken();
+//         // console.log("token",token);
+//         // res.status(200).json({ user, token });
+//     } catch (err) {
+//         res.status(500).json({ message: err.message });
+//     }
+// };
+

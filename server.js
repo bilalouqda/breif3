@@ -9,12 +9,16 @@ const productsRoute = require('./routes/products')
 const ordersRoute = require('./routes/orders');
 const bodyParser = require('body-parser');
 const rateLimit = require('./utils/rateLimite');
+const passport = require('./utils/passport');
+
 
 const app = express();
 const port = process.env.PORT || 5000;
 
 app.use(express.json());
 app.use(rateLimit);
+app.use(passport.initialize());
+
 
 app.use("/users",userRoute)
 app.use("/products",productsRoute)
@@ -28,10 +32,12 @@ app.get('/protected', passport.authenticate('jwt', { session: false }), (req, re
     res.json({ message: 'This is a protected route', user: req.user });
   });
 
-mongoose.connect(process.env.URL)
+mongoose.connect(process.env.URL_DB)
     .then(() => console.log('MongoDB connected'))
     .catch(err => console.error('MongoDB connection error:', err));
 
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
 });
+
+module.exports = app
